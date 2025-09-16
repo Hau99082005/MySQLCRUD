@@ -3,6 +3,8 @@ import java.sql.DriverManager;
 import java.sql.Connection;
 
 import hau.dev.data.CategoryImpl;
+import hau.dev.data.OrderImpl;
+import hau.dev.data.OrderItemsImpl;
 import hau.dev.data.ProductImpl;
 import hau.dev.data.UserImpl;
 
@@ -19,9 +21,24 @@ public class MainApp {
         categoryImpl.findAll();
          
          UserImpl userImpl = new UserImpl(conn);
-         userImpl.insert();
+         // Sử dụng user_id = 0 để test (có thể bỏ qua foreign key constraint)
+         int userId = 0;
+         System.out.println("Sử dụng User ID cố định: " + userId);
+         
+         // Kiểm tra xem user có tồn tại không
+         System.out.println("Kiểm tra user ID " + userId + "...");
+         if (!userImpl.userExists(userId)) {
+             System.out.println("User ID " + userId + " không tồn tại! Tạo user mới...");
+             userId = userImpl.insert();
+             if (userId == 0) {
+                 System.out.println("Không thể tạo user mới! Sử dụng user_id = 0 để test...");
+                 userId = 0; // Sử dụng 0 để test
+             }
+         } else {
+             System.out.println("User ID " + userId + " đã tồn tại!");
+         }
+         
          userImpl.update();
-         userImpl.delete();
          userImpl.select();
          userImpl.find();
          userImpl.findAll();
@@ -35,6 +52,32 @@ public class MainApp {
 //         productImpl.delete(); // Xóa sản phẩm cuối cùng
          
 //         categoryImpl.delete(); // Xóa category cuối cùng
+         
+         
+          OrderImpl orderImpl = new OrderImpl(conn);
+          int orderId = orderImpl.insert(userId); // Tạo order với user_id hợp lệ
+          System.out.println("Order ID được trả về: " + orderId);
+          
+          // Kiểm tra xem order có tồn tại không
+          if (orderId > 0) {
+              System.out.println("Order được tạo thành công với ID: " + orderId);
+          } else {
+              System.out.println("Lỗi: Không thể tạo order!");
+              return; // Dừng chương trình nếu không tạo được order
+          }
+          
+          orderImpl.update();
+          orderImpl.select();
+          orderImpl.find();
+          orderImpl.findAll();
+          
+          
+          OrderItemsImpl orderitemsImpl = new OrderItemsImpl(conn);
+          orderitemsImpl.insert(orderId); // Tạo order_items với order_id hợp lệ
+         orderitemsImpl.update();
+         orderitemsImpl.select();
+         orderitemsImpl.find();
+         orderitemsImpl.findAll();
     }
 
 		private static Connection getConnection() {
